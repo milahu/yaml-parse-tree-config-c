@@ -1,0 +1,7 @@
+debug: true
+whitelist:
+  - example.org
+  - spotify.com
+blacklist:
+  - https://example.org/ads/*
+  - https://spotify.com/tracking
