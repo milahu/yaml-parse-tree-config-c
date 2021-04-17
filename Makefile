@@ -44,7 +44,7 @@ install:
 	install -d $(DESTDIR)$(sysconfdir)/$(pname)
 	install -t $(DESTDIR)$(sysconfdir)/$(pname) -m 644 src/config.yaml # copy config file to /etc
 
-# ^ comment last line to test missing config file
+# DEVEL ^ comment last line of install to test missing config file
 
 .PHONY: uninstall
 uninstall:

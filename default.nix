@@ -39,13 +39,7 @@ stdenv.mkDerivation {
   preBuild = ''
     # https://nixos.wiki/wiki/C
     NIX_CFLAGS_COMPILE="${debugFlags} $(pkg-config --cflags glib-2.0) $NIX_CFLAGS_COMPILE"
-  '';
-
-  buildPhase = ''
-    runHook preBuild
     make clean # otherwise make says 'nothing to do'
-    make
-    runHook postBuild
   '';
 
   src = ./.;
