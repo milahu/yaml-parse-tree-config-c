@@ -1,14 +1,19 @@
 # nix-build default.nix && ./result/bin/yaml-parse
+# nix-build default.nix && ./result/bin/yaml-parse-libcyaml
 
 with import <nixpkgs> {};
 
 let
-  #debugFlags = "";
   debugFlags = "-g";
 
-  # https://github.com/nix-community/NUR#how-to-use
-  # error: undefined variable 'nur' at /home/user/src/glib-config-parser/default.nix:11:14
-  ####libcyaml = nur.repos.suhr.libcyaml;
+  # copy paste from /etc/nixos/configuration.nix
+  nur = import (builtins.fetchTarball {
+    # NUR 2021-04-15
+    url = "https://github.com/nix-community/NUR/archive/2ed3b8f5861313e9e8e8b39b1fb05f3a5a049325.tar.gz";
+    sha256 = "1rpl2jpwvp05gj79xflw5ka6lv149rkikh6x7zhr3za36s27q5pz";
+  }) { inherit pkgs; };
+
+  libcyaml = nur.repos.suhr.libcyaml;
 
 in
 stdenv.mkDerivation {
@@ -19,7 +24,11 @@ stdenv.mkDerivation {
   buildInputs = [
     glib # util fns, required by spotify anyway (zero cost)
     libyaml # low level yaml parser
-    ####libcyaml # schema-based yaml parser
+    libcyaml # schema-based yaml parser
+  ];
+
+  nativeBuildInputs = [
+    pkg-config
   ];
 
   makeFlags  = [
@@ -27,18 +36,16 @@ stdenv.mkDerivation {
     "sysconfdir=${placeholder "out"}/etc" # absolute path to /etc
   ];
 
-/* TODO restore with libcyaml
-    makeFlagsArray+=(CFLAGS="${debugFlags} -I${glib.dev}/include/glib-2.0 -I${glib.out}/lib/glib-2.0/include -I${libyaml}/include -I${libcyaml}/include")
-    makeFlagsArray+=(LDFLAGS="-L${glib.out}/lib -L${libyaml.out}/lib -L${libcyaml.out}/lib")
-*/
-
-  # TODO use pkg-config to generate paths to include and lib
   preBuild = ''
-    makeFlagsArray+=(CFLAGS="${debugFlags} -I${glib.dev}/include/glib-2.0 -I${glib.out}/lib/glib-2.0/include -I${libyaml}/include")
-    makeFlagsArray+=(LDFLAGS="-L${glib.out}/lib -L${libyaml.out}/lib")
+    # https://nixos.wiki/wiki/C
+    NIX_CFLAGS_COMPILE="${debugFlags} $(pkg-config --cflags glib-2.0) $NIX_CFLAGS_COMPILE"
+
+echo preBuild find:
+find .
+
   '';
 
-  src = ./src;
+  src = ./.;
   sourceRoot = "source"; # TODO why is this default?
   unpackPhase = ''
     runHook preUnpack
