@@ -1,3 +1,6 @@
 .cache
 result
 trash
+compile_commands.json
+yaml-parse-freeform
+yaml-parse-schema
