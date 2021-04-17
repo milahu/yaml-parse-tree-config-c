@@ -5,8 +5,6 @@
 
 #include <cyaml/cyaml.h>
 
-// work in progress ... build fails
-
 typedef struct {
   int debug;
   char **whitelist; int whitelist_count;
@@ -87,6 +85,39 @@ int main ()
     break;
   }
 
+  printf("tried all config files. *config_file = %p, config = %p\n", *config_file, config);
+
+  if (*config_file == NULL) {
+    // no config found
+    printf("no config file was found. fallback to default config\n");
+
+    // TODO write config file to ~/.config/... ?
+
+    // set default config
+    // workaround. libcyaml not yet supports default values
+    // https://github.com/tlsa/libcyaml/issues/96
+
+    config = malloc(sizeof(config_t));
+
+    config->debug = TRUE;
+
+    int blacklist_size = 2;
+    char *blacklist[] = { "bl fallback 1", "bl fallback 2", NULL };
+    config->blacklist_count = blacklist_size;
+    config->blacklist = malloc((blacklist_size + 1) * sizeof(char *));
+    for (int i = 0; i < blacklist_size; i++) {
+      config->blacklist[i] = (char *) blacklist[i];
+    }
+
+    int whitelist_size = 2;
+    char *whitelist[] = { "wl fallback 1", "wl fallback 2", NULL };
+    config->whitelist_count = whitelist_size;
+    config->whitelist = malloc((whitelist_size + 1) * sizeof(char *));
+    for (int i = 0; i < whitelist_size; i++) {
+      config->whitelist[i] = (char *) whitelist[i];
+    }
+  }
+
   // use config
   printf("config:\n");
   printf("```yaml\n");
@@ -102,8 +133,16 @@ int main ()
   printf("```\n");
 
   // free config
-  //cyaml_free(&config, &top_schema, config, 0);
-  cyaml_free(&cyaml_config, &top_schema, config, 0);
+  if (*config_file != NULL) {
+    // config was loaded by cyaml
+    cyaml_free(&cyaml_config, &top_schema, config, 0);
+  }
+  else {
+    // config was set manually
+    free(config->whitelist);
+    free(config->blacklist);
+    free(config);
+  }
 
   printf("done\n");
 

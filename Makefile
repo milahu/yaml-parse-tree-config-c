@@ -42,7 +42,9 @@ install:
 	install -t $(DESTDIR)$(prefix)$(bindir) --strip -m 755 yaml-parse-freeform
 	install -t $(DESTDIR)$(prefix)$(bindir) --strip -m 755 yaml-parse-schema
 	install -d $(DESTDIR)$(sysconfdir)/$(pname)
-	install -t $(DESTDIR)$(sysconfdir)/$(pname) -m 644 src/config.yaml
+	install -t $(DESTDIR)$(sysconfdir)/$(pname) -m 644 src/config.yaml # copy config file to /etc
+
+# ^ comment last line to test missing config file
 
 .PHONY: uninstall
 uninstall:
