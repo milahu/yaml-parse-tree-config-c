@@ -53,20 +53,24 @@ int load_config (char *name, config_t **config, char **config_file) {
   //const gchar *HOME = g_getenv ("HOME");
   //printf("getenv HOME: %s\n", (HOME != NULL) ? HOME : "getenv('HOME') returned NULL");
 
-  const gchar *user_config_dir = g_get_user_config_dir();
+  gchar *workdir_config;
+  workdir_config = g_strconcat (name, ".yaml", NULL);
 
   gchar *user_config;
-  user_config = g_strconcat (user_config_dir, "/spotify-adblock-linux/config.yaml", NULL);
+  const gchar *user_config_dir = g_get_user_config_dir();
+  user_config = g_strconcat (user_config_dir, "/", name, "/config.yaml", NULL);
   g_free((void *) user_config_dir); // (void *) to free const ptr
 
   gchar *system_config;
-  system_config = g_strconcat (SYSCONFDIR, "/spotify-adblock-linux/config.yaml", NULL);
+  // SYSCONFDIR is defined in Makefile (usually "/etc")
+  system_config = g_strconcat (SYSCONFDIR, "/", name, "/config.yaml", NULL);
 
   char *config_list[4];
-  config_list[0] = "spotify-adblock-linux.yaml";
+  config_list[0] = workdir_config;
   config_list[1] = user_config;
   config_list[2] = system_config;
   config_list[3] = NULL;
+  // ideally: memcpy() file_cur to config_file and free() all those strings before return
 
   char **file_cur;
   for (file_cur = config_list; *file_cur != NULL; file_cur++) {
@@ -97,9 +101,8 @@ int load_config (char *name, config_t **config, char **config_file) {
 
   if (*file_cur == NULL) {
     // no config found
+    // DEVEL for testing, comment line 45 in Makefile (install ... config.yaml)
     printf("no config file was found. fallback to default config\n");
-
-    // TODO write default config to ~/.config/${name}/config.yaml (user_config)
 
     // set default config
     // workaround. libcyaml not yet supports default values
@@ -123,6 +126,27 @@ int load_config (char *name, config_t **config, char **config_file) {
     (*config)->whitelist = malloc((whitelist_size + 1) * sizeof(char *));
     for (int i = 0; i < whitelist_size; i++) {
       (*config)->whitelist[i] = (char *) whitelist[i];
+    }
+
+    // write default config to ~/.config/${name}/config.yaml (user_config)
+    // TODO mkdir -p ~/.config/${name}
+    g_mkdir_with_parents (g_strconcat (user_config_dir, "/", name, NULL), 0755);
+    FILE *fd_user_config = fopen(user_config, "w");
+    if (fd_user_config == NULL) {
+      printf("failed to open file: %s\n", user_config);
+    }
+    else {
+      fprintf(fd_user_config, "debug: %s\n", ((*config)->debug == TRUE ? "true" : "false"));
+      fprintf(fd_user_config, "whitelist:\n");
+      for (unsigned i = 0; i < (*config)->whitelist_count; i++) {
+        fprintf(fd_user_config, "  - %s\n", (*config)->whitelist[i]);
+      }
+      fprintf(fd_user_config, "blacklist:\n");
+      for (unsigned i = 0; i < (*config)->blacklist_count; i++) {
+        fprintf(fd_user_config, "  - %s\n", (*config)->blacklist[i]);
+      }
+      fclose(fd_user_config);
+      printf("saved default config to: %s\n", user_config);
     }
   }
   return EXIT_SUCCESS;
