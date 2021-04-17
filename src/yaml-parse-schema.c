@@ -43,7 +43,7 @@ static const cyaml_config_t cyaml_config = {
 
 int main ()
 {
-  const gchar *HOME = g_getenv ("HOME");
+  //const gchar *HOME = g_getenv ("HOME");
   //printf("getenv HOME: %s\n", (HOME != NULL) ? HOME : "getenv('HOME') returned NULL");
 
   //const gchar *user_config_dir = g_get_user_config_dir();

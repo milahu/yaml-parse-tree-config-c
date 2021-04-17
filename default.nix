@@ -1,5 +1,5 @@
-# nix-build default.nix && ./result/bin/yaml-parse
-# nix-build default.nix && ./result/bin/yaml-parse-libcyaml
+# nix-build default.nix && echo && ./result/bin/yaml-parse-freeform
+# nix-build default.nix && echo && ./result/bin/yaml-parse-schema
 
 with import <nixpkgs> {};
 
@@ -39,10 +39,6 @@ stdenv.mkDerivation {
   preBuild = ''
     # https://nixos.wiki/wiki/C
     NIX_CFLAGS_COMPILE="${debugFlags} $(pkg-config --cflags glib-2.0) $NIX_CFLAGS_COMPILE"
-
-echo preBuild find:
-find .
-
   '';
 
   src = ./.;
