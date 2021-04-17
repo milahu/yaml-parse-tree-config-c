@@ -1,0 +1,5 @@
+{
+  "nixEnvSelector": {
+    "nixFile": "shell.nix"
+  }	
+}
